@@ -3,7 +3,7 @@ from lib.torch_lib import torch_vlcs_model
 from lib.utils import *
 import torch
 import torch.utils.data as Data
-import torch.nn.functional as F     # 激励函数都在这
+import torch.nn.functional as F
 import os
 from sklearn.metrics import accuracy_score
 np.random.seed(1447)
