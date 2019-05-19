@@ -75,6 +75,17 @@ def get_params(model, group):
         n = name.split('.')[0]
         if n in group:
             yield p
+            
+def freeze_params(model, group):
+    params = get_params(model, group)
+    for p in params:
+        p.requires_grad = False
+
+
+def unfreeze_params(model, group):
+    params = get_params(model, group)
+    for p in params:
+        p.requires_grad = True
 
 
 def eval(model, x_test, y_test):
@@ -176,18 +187,14 @@ for i in range(4):
                 loss_r = soft_loss(out_r, batch_y)
                 fea_weights = get_model_weights(model, fea)
                 loss = loss_agg + w_f * loss_f + w_r * loss_r
-                optim_F.zero_grad()
-                loss.backward()
-                optim_F.step()
 
-                out_agg = model(batch_x)
-                loss_agg = soft_loss(out_agg, batch_y)
-                out_c = model(batch_x, weights={**get_model_weights(model, cls),
-                                                **get_model_weights(d_models[model_j], fea)})
-                loss_c = soft_loss(out_c, batch_y)
-                loss_ = loss_agg + w_c * loss_c
+                optim_F.zero_grad()
+                loss.backward(retain_graph=True)
                 optim_C.zero_grad()
+                freeze_params(model, fea)
                 loss_.backward()
+                unfreeze_params(model, fea)
+                optim_F.step()
                 optim_C.step()
 
         acc = eval(model, x_test, y_test)
